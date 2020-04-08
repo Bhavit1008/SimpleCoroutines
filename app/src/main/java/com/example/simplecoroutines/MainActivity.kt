@@ -9,7 +9,9 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProviders
+import com.example.simplecoroutines.DataBase.MyDatabase
 import com.example.simplecoroutines.ViewModel.MyViewModel
+import com.example.simplecoroutines.ViewModel.SampleViewModelFactory
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.IO
@@ -29,23 +31,37 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        model = ViewModelProviders.of(this).get(MyViewModel::class.java)
+
+
+        val Source = MyDatabase.getInstance(application).sampleDao
+        val viewModelFactory = SampleViewModelFactory(Source)
+        val sampleViewModel =
+            ViewModelProviders.of(
+                this, viewModelFactory
+            ).get(MyViewModel::class.java)
+
+
 
         btn_result.setOnClickListener {
-            model!!.code.observe(this,object:Observer<Int>{
-                override fun onChanged(t: Int?) {
-                    setNew(t.toString())
-                }
+            sampleViewModel.code.observe(this, Observer {
+                textview.text = "Data from Database -> ${it} \n"
             })
-            CoroutineScope(IO).launch {
-                apiCall1()
-            }
+//            model!!.code.observe(this,object:Observer<String>{
+//                override fun onChanged(t: String?) {
+//                    if (t != null) {
+//                        setNew(t)
+//                    }
+//                }
+//            })
+//            CoroutineScope(IO).launch {
+//                apiCall1()
+//            }
 
         }
     }
     private suspend fun apiCall1() {
         val result1 = task1()
-        setTextonMain(result1)
+        //setTextonMain(result1)
     }
 
     private suspend fun task1() :String{
@@ -65,9 +81,5 @@ class MainActivity : AppCompatActivity() {
         Log.d("hello","API called")
     }
 
-    private suspend fun generateRandomColor(): Int {
-        val rnd = Random()
-        return Color.argb(255, rnd.nextInt(256), rnd.nextInt(256), rnd.nextInt(256))
-    }
 
 }
